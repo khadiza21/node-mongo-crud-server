@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion } = require("mongodb");
+const ObjectId = require("mongodb").ObjectId;
+
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -23,18 +25,38 @@ async function run() {
     // const haiku = database.collection("haiku");
     const userCollection = client.db("foodExpress").collection("user");
 
+    //get user
+    app.get("/user", async (req, res) => {
+      const query = {};
+      const cursor = userCollection.find(query);
+      const users = await cursor.toArray();
+      res.send(users);
+    });
+
     // create a document to insert
     //    const user = {
     //     name: "bk", email: "bk123@gmail.com"
     //   }
-    app.post("/user", (req, res) => {
-        const newUser = req.body;
-        console.log('adding new user',newUser);
-        res.send({res:'user data received'});
+
+    //POST user : add a new user
+    app.post("/user", async (req, res) => {
+      const newUser = req.body;
+      console.log("adding new user", newUser);
+      const result = await userCollection.insertOne(newUser);
+      res.send(result);
     });
 
-     const result = await userCollection.insertOne(user);
-     console.log(`A document was inserted with the _id bk: ${result.insertedId}`);
+    //DELETE a users
+    app.delete("/user/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await userCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // console.log(
+    //   `A document was inserted with the _id bk: ${result.insertedId}`
+    // );
   } finally {
     //await client.close();
   }
